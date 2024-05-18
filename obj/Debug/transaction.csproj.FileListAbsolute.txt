@@ -1,0 +1,10 @@
+C:\Users\kaan_\source\repos\transaction\bin\Debug\transaction.exe.config
+C:\Users\kaan_\source\repos\transaction\bin\Debug\transaction.exe
+C:\Users\kaan_\source\repos\transaction\bin\Debug\transaction.pdb
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.csproj.AssemblyReference.cache
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.Properties.Resources.resources
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.csproj.GenerateResource.cache
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.csproj.CoreCompileInputs.cache
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.exe
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.pdb
+C:\Users\kaan_\source\repos\transaction\obj\Debug\transaction.Form2.resources
