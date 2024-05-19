@@ -9,9 +9,15 @@ namespace transaction
 {
     public partial class Form2 : Form
     {
-        private string _connectionString = "Server=kypc;Database=AdventureWorks2022;Trusted_Connection=True;TrustServerCertificate=true;";
+        private string _connectionString = "Server=G513;Database=AdventureWorks2019;Trusted_Connection=True;TrustServerCertificate=true;";
         private IsolationLevel _isolationLevel;
-        private int _deadlockCount = 0; // Global deadlock count
+        private int a_deadlockCount = 0;
+        private int b_deadlockCount = 0;
+        private double _totalDurationTypeA = 0;
+        private double _totalDurationTypeB = 0;
+        private int _typeACount = 0;
+        private int _typeBCount = 0;
+        private object _lockObject = new object();
 
         public Form2()
         {
@@ -45,6 +51,10 @@ namespace transaction
             {
                 thread.Join();
             }
+
+            CalculateAndPrintAverageDurations();
+            Console.WriteLine("Deadlocks occured by Type A Threads: {0}", a_deadlockCount);
+            Console.WriteLine("Deadlocks occured by Type A Threads: {0}", b_deadlockCount);
         }
 
         private void TypeAUserThread()
@@ -83,21 +93,28 @@ namespace transaction
                         }
 
                         transaction.Commit();
-                        connection.Close();
 
                     }
                     catch (SqlException ex)
                     {
                         transaction.Rollback();
-                        Interlocked.Increment(ref _deadlockCount); // Increment global deadlock count
+                        Interlocked.Increment(ref a_deadlockCount);
                         // Handle error
+                    }
+                    finally
+                    {
+                        connection.Close();
                     }
                 }
             }
 
 
             TimeSpan elapsedTime = DateTime.Now - startTime;
-            Console.WriteLine("Type A User Thread finished. Deadlocks: {0}, Elapsed Time: {1}", _deadlockCount, elapsedTime);
+            lock (_lockObject)
+            {
+                _totalDurationTypeA += elapsedTime.TotalMilliseconds;
+                _typeACount++;
+            }
         }
 
         private void TypeBUserThread()
@@ -136,22 +153,38 @@ namespace transaction
                         }
 
                         transaction.Commit();
-                        connection.Close();
 
-                        
+
                     }
                     catch (SqlException ex)
                     {
                         transaction.Rollback();
-                        Interlocked.Increment(ref _deadlockCount); // Increment global deadlock count
+                        Interlocked.Increment(ref b_deadlockCount);
                         // Handle error
+                    }
+                    finally
+                    {
+                        connection.Close();
                     }
                 }
             }
 
 
             TimeSpan elapsedTime = DateTime.Now - startTime;
-            Console.WriteLine("Type B User Thread finished. Deadlocks: {0}, Elapsed Time: {1}", _deadlockCount, elapsedTime);
+            lock (_lockObject)
+            {
+                _totalDurationTypeB += elapsedTime.TotalMilliseconds;
+                _typeBCount++;
+            }
+        }
+
+        private void CalculateAndPrintAverageDurations()
+        {
+            double averageDurationTypeA = _totalDurationTypeA / _typeACount;
+            double averageDurationTypeB = _totalDurationTypeB / _typeBCount;
+
+            Console.WriteLine("Average Duration of Type A Threads: {0} ms", averageDurationTypeA);
+            Console.WriteLine("Average Duration of Type B Threads: {0} ms", averageDurationTypeB);
         }
 
         private void ExecuteUpdateQuery(SqlConnection connection, SqlTransaction transaction, string beginDate, string endDate)
@@ -170,7 +203,7 @@ namespace transaction
                     if (ex.Number == 1205) // Deadlock
                     {
                         transaction.Rollback();
-                        Interlocked.Increment(ref _deadlockCount); // Increment global deadlock count
+                        Interlocked.Increment(ref a_deadlockCount); // Increment global deadlock count
                         ExecuteUpdateQuery(connection, transaction, beginDate, endDate);
                     }
                     else
@@ -197,7 +230,7 @@ namespace transaction
                     if (ex.Number == 1205) // Deadlock
                     {
                         transaction.Rollback();
-                        Interlocked.Increment(ref _deadlockCount); // Increment global deadlock count
+                        Interlocked.Increment(ref b_deadlockCount); // Increment global deadlock count
                         ExecuteSelectQuery(connection, transaction, beginDate, endDate);
                     }
                     else
